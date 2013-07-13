@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import xmlrpclib
+try:
+    from xmlrpc import client # Python 3
+except ImportError:
+    import xmlrpclib as client # Python 2
 
 
 class API(object):
@@ -7,7 +10,7 @@ class API(object):
     def __init__(self, username, password, url='https://api.loopia.se/RPCSERV'):
         self.username = username
         self.password = password
-        self.client = xmlrpclib.ServerProxy(uri=url, encoding='utf-8')
+        self.client = client.ServerProxy(uri=url, encoding='utf-8')
 
     def domain(self, domain=None):
         """
