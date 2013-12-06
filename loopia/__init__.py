@@ -1,16 +1,34 @@
 # -*- coding: utf-8 -*-
 try:
-    from xmlrpc import client # Python 3
+    from xmlrpc import client as xmlclient # Python 3
 except ImportError:
-    import xmlrpclib as client # Python 2
+    import xmlrpclib as xmlclient # Python 2
+
+from loopia.exceptions import DomainOccupiedError
 
 
 class API(object):
 
-    def __init__(self, username, password, url='https://api.loopia.se/RPCSERV'):
+    def __init__(self, username, password):
         self.username = username
         self.password = password
-        self.client = client.ServerProxy(uri=url, encoding='utf-8')
+
+    def call(self, method=None, args=None):
+        """
+        Makes the call to the Loopia RPC Server.
+        """
+
+        client = xmlclient.ServerProxy(uri='https://test-api.loopia.se/RPCSERV', encoding='utf-8', allow_none=True)
+        args = [self.username, self.password] + args
+        response = getattr(client, method)(*args)
+
+        if response == 'OK':
+            return True
+        elif response == 'DOMAIN_OCCUPIED':
+            raise DomainOccupiedError()
+        else:
+            return ValueError('Something whent wrong: %s' % response)
+
 
     def domain(self, domain=None):
         """
@@ -34,20 +52,17 @@ class Domain(API):
         self.domainname = domainname
         self.username = apiobj.username
         self.password = apiobj.password
-        self.client = apiobj.client
 
     def is_free(self):
         """
         Check if a domain is availble to register.
         """
 
-        response = self.client.domainIsFree(
-            self.username,
-            self.password,
-            self.domainname
-        )
+        try:
+            return self.call(method='domainIsFree', args=[self.domainname])
+        except DomainOccupiedError:
+            return False
 
-        return response
 
     def order(self, customer_number=None, has_accepted_terms_and_conditions=0):
         """
@@ -57,30 +72,4 @@ class Domain(API):
         set a customer for the domain.
         """
 
-        response = self.client.orderDomain(
-            self.username,
-            self.password,
-            self.domainname,
-            customer_number,
-            has_accepted_terms_and_conditions
-        )
-
-        return response
-
-
-    def subdomains(self, customer_number=None):
-        """
-        List a domains subdomains.
-
-        customer_number is optional and only used for resellers to
-        set a customer for the domain.
-        """
-
-        response = self.client.getSubdomains(
-            self.username,
-            self.password,
-            customer_number,
-            self.domainname
-        )
-
-        return response
+        return self.call(method='orderDomain', args=[customer_number, self.domainname, has_accepted_terms_and_conditions])
