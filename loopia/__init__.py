@@ -19,15 +19,14 @@ class API(object):
         """
 
         client = xmlclient.ServerProxy(uri='https://test-api.loopia.se/RPCSERV', encoding='utf-8', allow_none=True)
-        args = [self.username, self.password] + args
-        response = getattr(client, method)(*args)
+        response = getattr(client, method)(self.username, self.password, *args)
 
         if response == 'OK':
             return True
         elif response == 'DOMAIN_OCCUPIED':
             raise DomainOccupiedError()
         else:
-            return ValueError('Something whent wrong: %s' % response)
+            raise ValueError('Something whent wrong: %s' % response)
 
 
     def domain(self, domain=None):
@@ -35,9 +34,10 @@ class API(object):
         Calls the Domain class with an instance of the API.
 
         Usage Example:
-        loopia = loopia.API('username', 'password')
-        domain = loopia.domain('google.com')
-        domain.is_free()
+        >>> loopia = loopia.API('username', 'password')
+        >>> domain = loopia.domain('google.com')
+        >>> domain.is_free()
+        False
         """
 
         return Domain(apiobj=self, domainname=domain)

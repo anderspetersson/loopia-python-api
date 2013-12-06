@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='loopia',
-    version='0.2.0',
+    version='0.2.1',
     author='Anders Petersson',
     author_email='me@anderspetersson.se',
     url='http://github.com/anderspetersson/loopia-python-api',
