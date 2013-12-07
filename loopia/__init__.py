@@ -88,3 +88,29 @@ class Domain(API):
         """
 
         return self.call(method='getDomain', args=[self.domainname])
+
+
+    def get_subdomains(self):
+        """
+        Get all subdomains for a domain.
+        """
+
+        return self.call(method='getSubdomains', args=[self.domainname])
+
+
+    def get_zonerecords(self, subdomain=None):
+        """
+        Get zone records for a subdomain
+        """
+
+        return self.call(method='getZoneRecords', args=[self.domainname, subdomain])
+
+    def add_zonerecord(self, subdomain=None, record_type=None, record_ttl=3600, 
+        record_priority=0, record_data=None):
+        """
+        Add a DNS record to a subdomain.
+        """
+
+        return self.call(method='addZoneRecord', args=[self.domainname, subdomain, 
+            {'type': record_type, 'ttl': record_ttl, 'priority': record_priority, 'rdata': record_data}])
+
