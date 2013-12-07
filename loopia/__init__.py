@@ -13,7 +13,7 @@ class API(object):
         self.username = username
         self.password = password
 
-    def call(self, method=None, args=None):
+    def call(self, method=None, args=[]):
         """
         Makes the call to the Loopia RPC Server.
         """
@@ -26,7 +26,14 @@ class API(object):
         elif response == 'DOMAIN_OCCUPIED':
             raise DomainOccupiedError()
         else:
-            raise ValueError('Something whent wrong: %s' % response)
+            return response
+
+    def get_domains(self):
+        """
+        Get all domains for the current account.
+        """
+
+        return self.call(method='getDomains')
 
 
     def domain(self, domain=None):
@@ -73,3 +80,11 @@ class Domain(API):
         """
 
         return self.call(method='orderDomain', args=[customer_number, self.domainname, has_accepted_terms_and_conditions])
+
+
+    def info(self):
+        """
+        Get info such as expiration date and registration status for a domain.
+        """
+
+        return self.call(method='getDomain', args=[self.domainname])
