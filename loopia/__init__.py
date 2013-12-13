@@ -35,6 +35,13 @@ class API(object):
 
         return self.call(method='getDomains')
 
+    def get_unpaid_invoices(self, with_vat=True):
+        """
+        Get all unpaid invoices.
+        """
+
+        return self.call(method='getUnpaidInvoices', args=[with_vat])
+
 
     def domain(self, domain=None):
         """
@@ -48,6 +55,13 @@ class API(object):
         """
 
         return Domain(apiobj=self, domainname=domain)
+
+    def invoice(self, reference_no=None, with_vat=True):
+        """
+        Calls the Invoice class with an instance of the API.
+        """
+
+        return Invoice(apiobj=self, reference_no=reference_no)
 
 
 class Domain(API):
@@ -71,7 +85,7 @@ class Domain(API):
             return False
 
 
-    def order(self, customer_number=None, has_accepted_terms_and_conditions=0):
+    def order(self, customer_number='', has_accepted_terms_and_conditions=0):
         """
         Order a domain.
 
@@ -105,12 +119,29 @@ class Domain(API):
 
         return self.call(method='getZoneRecords', args=[self.domainname, subdomain])
 
-    def add_zonerecord(self, subdomain=None, record_type=None, record_ttl=3600, 
+    def add_zonerecord(self, subdomain=None, record_type=None, record_ttl=3600,
         record_priority=0, record_data=None):
         """
         Add a DNS record to a subdomain.
         """
 
-        return self.call(method='addZoneRecord', args=[self.domainname, subdomain, 
+        return self.call(method='addZoneRecord', args=[self.domainname, subdomain,
             {'type': record_type, 'ttl': record_ttl, 'priority': record_priority, 'rdata': record_data}])
 
+class Invoice(API):
+    """
+    Handle invoices
+    """
+
+    def __init__(self, apiobj, reference_no=None, with_vat=True):
+        self.reference_no = reference_no
+        self.with_vat = with_vat
+        self.username = apiobj.username
+        self.password = apiobj.password
+
+    def info(self):
+        """
+        Get info about an invoice, such as total to pay and expiry date.
+        """
+
+        self.call(method='getInvoice', args=[self.reference_no, self.with_vat])
