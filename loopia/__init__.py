@@ -4,7 +4,7 @@ try:
 except ImportError:
     import xmlrpclib as xmlclient # Python 2
 
-from loopia.exceptions import DomainOccupiedError
+from loopia.exceptions import DomainOccupiedError, UnknownError
 
 
 class API(object):
@@ -25,6 +25,8 @@ class API(object):
             return True
         elif response == 'DOMAIN_OCCUPIED':
             raise DomainOccupiedError()
+        elif response == 'UNKNOWN_ERROR':
+            raise UnknownError()
         else:
             return response
 
@@ -143,7 +145,7 @@ class Domain(API):
         Add a subdomain to a domain.
         """
 
-        self.subdomain(self.domainname, subdomain).create()
+        return self.subdomain(self.domainname, subdomain).create()
 
     def remove(self, deactivate=False):
         """
@@ -172,7 +174,8 @@ class Subdomain(API):
         Add a subdomain to a domain.
         """
 
-        return self.call(method='addSubdomain', args=[self.domainname, self.subdomain])
+        if self.call(method='addSubdomain', args=[self.domainname, self.subdomain]):
+            return self
 
     def remove(self):
         """
@@ -206,7 +209,7 @@ class Subdomain(API):
         Add a DNS record to a subdomain.
         """
 
-        self.zonerecord(self.domainname, self.subdomain, type, ttl, priority, rdata).create()
+        return self.zonerecord(self.domainname, self.subdomain, type, ttl, priority, rdata).create()
 
     def remove_zonerecord(self, record_id=None, remove_all=False):
         """
@@ -254,7 +257,9 @@ class ZoneRecord(API):
                     'rdata': self.rdata
                  }
 
-        self.call(method='addZoneRecord', args=[self.domainname, self.subdomain, record])
+        if self.call(method='addZoneRecord', args=[self.domainname, self.subdomain, record]):
+            return self
+
 
     def remove(self):
         """
