@@ -68,11 +68,11 @@ class API(object):
 
         return Subdomain(apiobj=self, domainname=domain, subdomain=subdomain)
 
-    def zonerecord(self, domain=None, subdomain=None, record_type='A', \
+    def zonerecord(self, domain=None, subdomain=None, record_id=None, type='A', \
         ttl=3600, priority=None, rdata=None):
 
-        return ZoneRecord(apiobj=self, domainname=domain, subdomain=subdomain, record_type=record_type, \
-            ttl=ttl, priority=priority, rdata=rdata)
+        return ZoneRecord(apiobj=self, domainname=domain, subdomain=subdomain, record_id=record_id, \
+            type=type, ttl=ttl, priority=priority, rdata=rdata)
 
     def invoice(self, reference_no=None, with_vat=True):
         """
@@ -93,7 +93,7 @@ class Domain(API):
         self.password = apiobj.password
 
     def __str__(self):
-        return self.domainname
+        return str(self.domainname)
 
     def is_free(self):
         """
@@ -145,15 +145,6 @@ class Domain(API):
 
         self.subdomain(self.domainname, subdomain).create()
 
-    def add_zonerecord(self, subdomain=None, record_type=None, record_ttl=3600,
-        record_priority=0, record_data=None):
-        """
-        Add a DNS record to a subdomain.
-        """
-
-        return self.call(method='addZoneRecord', args=[self.domainname, subdomain,
-            {'type': record_type, 'ttl': record_ttl, 'priority': record_priority, 'rdata': record_data}])
-
     def remove(self, deactivate=False):
         """
         Remove a domain from account, if deactivate is True, wait until the deactivation-date.
@@ -195,14 +186,27 @@ class Subdomain(API):
         Get all DNS records for a domain.
         """
 
-        return self.call(method='getZoneRecords', args=[self.domainname, self.subdomain])
+        response = self.call(method='getZoneRecords', args=[self.domainname, self.subdomain])
+        records = []
+        for r in response:
+            record = self.zonerecord(
+                domain=self.domainname, 
+                subdomain=self.subdomain,
+                record_id=r['record_id'],
+                type=r['type'],
+                ttl=r['ttl'],
+                priority=r['priority'],
+                rdata=r['rdata']
+            )
+            records.append(record)
+        return records
 
-    def add_zonerecord(self, record_type='A', ttl=3600, priority=None, rdata=None):
+    def add_zonerecord(self, type='A', ttl=3600, priority=None, rdata=None):
         """
-        Add a subdomain to a domain.
+        Add a DNS record to a subdomain.
         """
 
-        self.zonerecord(self.domainname, self.subdomain, record_type, ttl, priority, rdata).create()
+        self.zonerecord(self.domainname, self.subdomain, type, ttl, priority, rdata).create()
 
 
 class ZoneRecord(API):
@@ -210,12 +214,12 @@ class ZoneRecord(API):
     Handle DNS records.
     """
 
-    def __init__(self, apiobj, domainname, subdomain, record_id=None, record_type='A', \
+    def __init__(self, apiobj, domainname, subdomain, record_id=None, type='A', \
                  ttl=3600, priority=None, rdata=None):
         self.domainname = domainname
         self.subdomain = subdomain
         self.record_id = record_id
-        self.type = record_type
+        self.type = type
         self.ttl = ttl
         self.priority = priority
         self.rdata = rdata
@@ -223,7 +227,8 @@ class ZoneRecord(API):
         self.password = apiobj.password
 
     def __str__(self):
-        return self.record_id
+        return '%s %s %s %s %s %d %d' % (str(self.record_id), self.subdomain, self.domainname, self.type, 
+            str(self.rdata), self.ttl, self.priority)
 
     def create(self):
         """
