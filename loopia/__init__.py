@@ -18,7 +18,7 @@ class API(object):
         Makes the call to the Loopia RPC Server.
         """
 
-        client = xmlclient.ServerProxy(uri='https://test-api.loopia.se/RPCSERV', encoding='utf-8', allow_none=True)
+        client = xmlclient.ServerProxy(uri='https://api.loopia.se/RPCSERV', encoding='utf-8', allow_none=True)
         response = getattr(client, method)(self.username, self.password, *args)
 
         if response == 'OK':
@@ -33,7 +33,12 @@ class API(object):
         Get all domains for the current account.
         """
 
-        return self.call(method='getDomains')
+        response = self.call(method='getDomains')
+        domains = []
+        for d in response:
+            domain = self.domain(domain=d['domain'])
+            domains.append(domain)
+        return domains
 
     def get_unpaid_invoices(self, with_vat=True):
         """
@@ -56,6 +61,19 @@ class API(object):
 
         return Domain(apiobj=self, domainname=domain)
 
+    def subdomain(self, domain=None, subdomain=None):
+        """
+        Calls the Subdomain class with an instance of the API
+        """
+
+        return Subdomain(apiobj=self, domainname=domain, subdomain=subdomain)
+
+    def zonerecord(self, domain=None, subdomain=None, record_type='A', \
+        ttl=3600, priority=None, rdata=None):
+
+        return ZoneRecord(apiobj=self, domainname=domain, subdomain=subdomain, record_type=record_type, \
+            ttl=ttl, priority=priority, rdata=rdata)
+
     def invoice(self, reference_no=None, with_vat=True):
         """
         Calls the Invoice class with an instance of the API.
@@ -73,6 +91,9 @@ class Domain(API):
         self.domainname = domainname
         self.username = apiobj.username
         self.password = apiobj.password
+
+    def __str__(self):
+        return self.domainname
 
     def is_free(self):
         """
@@ -99,6 +120,7 @@ class Domain(API):
     def info(self):
         """
         Get info such as expiration date and registration status for a domain.
+        Can only be used on domains in account.
         """
 
         return self.call(method='getDomain', args=[self.domainname])
@@ -109,15 +131,19 @@ class Domain(API):
         Get all subdomains for a domain.
         """
 
-        return self.call(method='getSubdomains', args=[self.domainname])
+        response = self.call(method='getSubdomains', args=[self.domainname])
+        subdomains = []
+        for s in response:
+            subdomain = self.subdomain(domain=self.domainname, subdomain=s)
+            subdomains.append(subdomain)
+        return subdomains
 
-
-    def get_zonerecords(self, subdomain=None):
+    def add_subdomain(self, subdomain):
         """
-        Get zone records for a subdomain
+        Add a subdomain to a domain.
         """
 
-        return self.call(method='getZoneRecords', args=[self.domainname, subdomain])
+        self.subdomain(self.domainname, subdomain).create()
 
     def add_zonerecord(self, subdomain=None, record_type=None, record_ttl=3600,
         record_priority=0, record_data=None):
@@ -127,6 +153,92 @@ class Domain(API):
 
         return self.call(method='addZoneRecord', args=[self.domainname, subdomain,
             {'type': record_type, 'ttl': record_ttl, 'priority': record_priority, 'rdata': record_data}])
+
+    def remove(self, deactivate=False):
+        """
+        Remove a domain from account, if deactivate is True, wait until the deactivation-date.
+        """
+
+        return self.call(method='removeDomain', args=[self.domainname, deactivate])
+
+
+class Subdomain(API):
+    """
+    Handle subdomains.
+    """
+
+    def __init__(self, apiobj, domainname=None, subdomain=None):
+        self.domainname = domainname
+        self.subdomain = subdomain
+        self.username = apiobj.username
+        self.password = apiobj.password
+
+    def __str__(self):
+        return '%s.%s' % (self.subdomain, self.domainname)
+
+    def create(self):
+        """
+        Add a subdomain to a domain.
+        """
+
+        return self.call(method='addSubdomain', args=[self.domainname, self.subdomain])
+
+    def remove(self):
+        """
+        Remove a subdomain from a domain.
+        """
+
+        return self.call(method='removeSubdomain', args=[self.domainname, self.subdomain])
+
+    def get_zonerecords(self):
+        """
+        Get all DNS records for a domain.
+        """
+
+        return self.call(method='getZoneRecords', args=[self.domainname, self.subdomain])
+
+    def add_zonerecord(self, record_type='A', ttl=3600, priority=None, rdata=None):
+        """
+        Add a subdomain to a domain.
+        """
+
+        self.zonerecord(self.domainname, self.subdomain, record_type, ttl, priority, rdata).create()
+
+
+class ZoneRecord(API):
+    """
+    Handle DNS records.
+    """
+
+    def __init__(self, apiobj, domainname, subdomain, record_id=None, record_type='A', \
+                 ttl=3600, priority=None, rdata=None):
+        self.domainname = domainname
+        self.subdomain = subdomain
+        self.record_id = record_id
+        self.type = record_type
+        self.ttl = ttl
+        self.priority = priority
+        self.rdata = rdata
+        self.username = apiobj.username
+        self.password = apiobj.password
+
+    def __str__(self):
+        return self.record_id
+
+    def create(self):
+        """
+        Add a DNS entry to a (sub)domain.
+        """
+
+        record = {
+                    'type': self.type,
+                    'ttl': self.ttl,
+                    'priority': self.priority,
+                    'rdata': self.rdata
+                 }
+
+        self.call(method='addZoneRecord', args=[self.domainname, self.subdomain, record])
+
 
 class Invoice(API):
     """
