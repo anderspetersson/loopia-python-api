@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='loopia',
-    version='0.3.0',
+    version='0.4.0',
     author='Anders Petersson',
     author_email='me@anderspetersson.se',
     url='http://github.com/anderspetersson/loopia-python-api',
@@ -12,10 +12,12 @@ setup(
     zip_safe=False,
     include_package_data=True,
     classifiers=[
-        'Framework :: Django',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
-        'Topic :: Software Development'
+        'Topic :: Software Development',
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4"
     ],
 )
