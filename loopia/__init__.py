@@ -208,6 +208,18 @@ class Subdomain(API):
 
         self.zonerecord(self.domainname, self.subdomain, type, ttl, priority, rdata).create()
 
+    def remove_zonerecord(self, record_id=None, remove_all=False):
+        """
+        Remove all DNS entries for a subdomain or the one specified with record_id
+        """
+
+        if record_id:
+            r = ZoneRecord(domainname=self.domainname, subdomain=self.subdomain, record_id=record_id)
+            r.remove()
+        elif remove_all:
+            for r in self.get_zonerecords():
+                r.remove()
+
 
 class ZoneRecord(API):
     """
@@ -232,7 +244,7 @@ class ZoneRecord(API):
 
     def create(self):
         """
-        Add a DNS entry to a (sub)domain.
+        Add a DNS entry to a subdomain.
         """
 
         record = {
@@ -243,6 +255,13 @@ class ZoneRecord(API):
                  }
 
         self.call(method='addZoneRecord', args=[self.domainname, self.subdomain, record])
+
+    def remove(self):
+        """
+        Remove a DNS entry from a subdomain.
+        """
+
+        self.call(method='removeZoneRecord', args=[self.domainname, self.subdomain, self.record_id])
 
 
 class Invoice(API):
