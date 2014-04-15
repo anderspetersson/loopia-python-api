@@ -4,7 +4,7 @@ try:
 except ImportError:
     import xmlrpclib as xmlclient # Python 2
 
-from loopia.exceptions import DomainOccupiedError, UnknownError
+from loopia.exceptions import DomainOccupiedError, UnknownError, AuthError, BadInDataError, RateLimitedError
 
 
 class API(object):
@@ -23,8 +23,14 @@ class API(object):
 
         if response == 'OK':
             return True
+        elif response == 'AUTH_ERROR':
+            raise AuthError()
         elif response == 'DOMAIN_OCCUPIED':
             raise DomainOccupiedError()
+        elif response == 'RATE_LIMITED':
+            raise RateLimitedError()
+        elif response == 'BAD_INDATA':
+            raise BadInDataError()
         elif response == 'UNKNOWN_ERROR':
             raise UnknownError()
         else:
