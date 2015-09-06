@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 try:
-    from xmlrpc import client as xmlclient # Python 3
+    from xmlrpc import client as xmlclient  # Python 3
 except ImportError:
-    import xmlrpclib as xmlclient # Python 2
+    import xmlrpclib as xmlclient  # Python 2
 
 from loopia.exceptions import DomainOccupiedError, UnknownError, AuthError, BadInDataError, RateLimitedError
 
@@ -55,7 +55,6 @@ class API(object):
 
         return self.call(method='getUnpaidInvoices', args=[with_vat])
 
-
     def domain(self, domain=None):
         """
         Calls the Domain class with an instance of the API.
@@ -76,11 +75,12 @@ class API(object):
 
         return Subdomain(apiobj=self, domainname=domain, subdomain=subdomain)
 
-    def zonerecord(self, domain=None, subdomain=None, record_id=None, type='A', \
-        ttl=3600, priority=None, rdata=None):
+    def zonerecord(self, domain=None, subdomain=None, record_id=None, type='A',
+                   ttl=3600, priority=None, rdata=None):
 
-        return ZoneRecord(apiobj=self, domainname=domain, subdomain=subdomain, record_id=record_id, \
-            type=type, ttl=ttl, priority=priority, rdata=rdata)
+        return ZoneRecord(apiobj=self, domainname=domain, subdomain=subdomain,
+                          record_id=record_id, type=type, ttl=ttl,
+                          priority=priority, rdata=rdata)
 
     def invoice(self, reference_no=None, with_vat=True):
         """
@@ -113,7 +113,6 @@ class Domain(API):
         except DomainOccupiedError:
             return False
 
-
     def order(self, customer_number='', has_accepted_terms_and_conditions=0):
         """
         Order a domain.
@@ -124,7 +123,6 @@ class Domain(API):
 
         return self.call(method='orderDomain', args=[customer_number, self.domainname, has_accepted_terms_and_conditions])
 
-
     def info(self):
         """
         Get info such as expiration date and registration status for a domain.
@@ -132,7 +130,6 @@ class Domain(API):
         """
 
         return self.call(method='getDomain', args=[self.domainname])
-
 
     def get_subdomains(self):
         """
@@ -199,7 +196,7 @@ class Subdomain(API):
         records = []
         for r in response:
             record = self.zonerecord(
-                domain=self.domainname, 
+                domain=self.domainname,
                 subdomain=self.subdomain,
                 record_id=r['record_id'],
                 type=r['type'],
@@ -235,7 +232,7 @@ class ZoneRecord(API):
     Handle DNS records.
     """
 
-    def __init__(self, apiobj, domainname, subdomain, record_id=None, type='A', \
+    def __init__(self, apiobj, domainname, subdomain, record_id=None, type='A',
                  ttl=3600, priority=None, rdata=None):
         self.domainname = domainname
         self.subdomain = subdomain
@@ -248,8 +245,10 @@ class ZoneRecord(API):
         self.password = apiobj.password
 
     def __str__(self):
-        return '%s %s %s %s %s %d %d' % (str(self.record_id), self.subdomain, self.domainname, self.type, 
-            str(self.rdata), self.ttl, self.priority)
+        return '%s %s %s %s %s %d %d' % (
+            str(self.record_id), self.subdomain, self.domainname, self.type,
+            str(self.rdata), self.ttl, self.priority
+        )
 
     def create(self):
         """
@@ -257,15 +256,14 @@ class ZoneRecord(API):
         """
 
         record = {
-                    'type': self.type,
-                    'ttl': self.ttl,
-                    'priority': self.priority,
-                    'rdata': self.rdata
-                 }
+            'type': self.type,
+            'ttl': self.ttl,
+            'priority': self.priority,
+            'rdata': self.rdata,
+        }
 
         if self.call(method='addZoneRecord', args=[self.domainname, self.subdomain, record]):
             return self
-
 
     def remove(self):
         """
