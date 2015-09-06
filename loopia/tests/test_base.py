@@ -1,4 +1,15 @@
+import functools
 import loopia
+import pytest
+
+TestAPI = functools.partial(loopia.API,
+                            api_endpoint='https://api.loopia.se/RPCSERV')
+
+
+def test_auth_error():
+    api = TestAPI('abc', '123')
+    with pytest.raises(loopia.exceptions.AuthError):
+        api.get_domains()
 
 
 def test_subclass_overrides():

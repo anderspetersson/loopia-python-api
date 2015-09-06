@@ -13,21 +13,23 @@ class API(object):
     zonerecord_class = property(lambda self: ZoneRecord)
     invoice_class = property(lambda self: Invoice)
 
-    def __init__(self, username, password):
+    def __init__(self, username, password,
+                 api_endpoint='https://api.loopia.se/RPCSERV'):
         self.username = username
         self.password = password
+        self.api_endpoint = api_endpoint
 
     def call(self, method=None, args=[]):
         """
         Makes the call to the Loopia RPC Server.
         """
 
-        client = xmlclient.ServerProxy(uri='https://api.loopia.se/RPCSERV', encoding='utf-8', allow_none=True)
+        client = xmlclient.ServerProxy(uri=self.api_endpoint, encoding='utf-8',
+                                       allow_none=True)
         response = getattr(client, method)(self.username, self.password, *args)
-
         if response == 'OK':
             return True
-        elif response == 'AUTH_ERROR':
+        elif 'AUTH_ERROR' in response:
             raise AuthError()
         elif response == 'DOMAIN_OCCUPIED':
             raise DomainOccupiedError()
