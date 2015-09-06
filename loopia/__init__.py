@@ -8,6 +8,10 @@ from loopia.exceptions import DomainOccupiedError, UnknownError, AuthError, BadI
 
 
 class API(object):
+    domain_class = property(lambda self: Domain)
+    subdomain_class = property(lambda self: Subdomain)
+    zonerecord_class = property(lambda self: ZoneRecord)
+    invoice_class = property(lambda self: Invoice)
 
     def __init__(self, username, password):
         self.username = username
@@ -66,28 +70,30 @@ class API(object):
         False
         """
 
-        return Domain(apiobj=self, domainname=domain)
+        return self.domain_class(apiobj=self, domainname=domain)
 
     def subdomain(self, domain=None, subdomain=None):
         """
         Calls the Subdomain class with an instance of the API
         """
 
-        return Subdomain(apiobj=self, domainname=domain, subdomain=subdomain)
+        return self.subdomain_class(apiobj=self, domainname=domain,
+                                    subdomain=subdomain)
 
     def zonerecord(self, domain=None, subdomain=None, record_id=None, type='A',
                    ttl=3600, priority=None, rdata=None):
 
-        return ZoneRecord(apiobj=self, domainname=domain, subdomain=subdomain,
-                          record_id=record_id, type=type, ttl=ttl,
-                          priority=priority, rdata=rdata)
+        return self.zonerecord_class(apiobj=self, domainname=domain,
+                                     subdomain=subdomain, record_id=record_id,
+                                     type=type, ttl=ttl, priority=priority,
+                                     rdata=rdata)
 
     def invoice(self, reference_no=None, with_vat=True):
         """
         Calls the Invoice class with an instance of the API.
         """
 
-        return Invoice(apiobj=self, reference_no=reference_no)
+        return self.invoice_class(apiobj=self, reference_no=reference_no)
 
 
 class Domain(API):
