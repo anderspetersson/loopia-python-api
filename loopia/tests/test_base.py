@@ -2,14 +2,29 @@ import functools
 import loopia
 import pytest
 
-TestAPI = functools.partial(loopia.API,
-                            api_endpoint='https://api.loopia.se/RPCSERV')
+TEST_API_ENDPOINT = 'https://test-api.loopia.se/RPCSERV'
+TestAPI = functools.partial(loopia.API, api_endpoint=TEST_API_ENDPOINT)
+
+
+def test_api_endpoint_attribute():
+    api = TestAPI('abc', '123')
+    domain = api.domain()
+    subdomain = api.subdomain()
+    zonerecord = api.zonerecord()
+    invoice = api.invoice()
+    for obj in (api, domain, subdomain, zonerecord, invoice):
+        obj.api_endpoint == TEST_API_ENDPOINT
 
 
 def test_auth_error():
     api = TestAPI('abc', '123')
-    with pytest.raises(loopia.exceptions.AuthError):
-        api.get_domains()
+    domain = api.domain()
+    subdomain = api.subdomain()
+    zonerecord = api.zonerecord()
+    invoice = api.invoice()
+    for obj in (api, domain, subdomain, zonerecord, invoice):
+        with pytest.raises(loopia.exceptions.AuthError):
+            obj.get_domains()
 
 
 def test_subclass_overrides():
