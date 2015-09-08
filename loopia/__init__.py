@@ -283,6 +283,21 @@ class ZoneRecord(API):
 
         self.call(method='removeZoneRecord', args=[self.domainname, self.subdomain, self.record_id])
 
+    def update(self):
+        """
+        Update record with the instance's configured information.
+        """
+        record_obj = dict(
+            record_id=self.record_id,
+            type=self.type,
+            ttl=self.ttl,
+            priority=self.priority,
+            rdata=self.rdata,
+        )
+        resp = self.call(method='updateZoneRecord',
+                         args=[self.domainname, self.subdomain, record_obj])
+        return resp
+
 
 class Invoice(API):
     """
